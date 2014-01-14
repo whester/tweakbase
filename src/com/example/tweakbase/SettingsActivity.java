@@ -14,6 +14,16 @@ import android.util.Log;
 
 import com.example.tweakbase.LocationService.LocalBinder;
 
+
+/**
+ * SettingsActivity is meant to deal with displaying TweakBase's setting 
+ * preferences. Currently, the only setting is allowing the application
+ * to track the user's location or not with a checkbox. This class extends
+ * Activity, an Android class.
+ * 
+ * @author Will Hester
+ *
+ */
 public class SettingsActivity extends Activity {
 	LocationService locationService;
 	boolean mBound = false;
@@ -30,6 +40,14 @@ public class SettingsActivity extends Activity {
   	  }
   	};
 	
+  	/**
+  	 * Inherited from the Activity class. Called by the Android OS when
+  	 * the activity is opened.
+  	 * 
+  	 *  @param savedInstanceState	a Bundle (Android class that contains
+  	 *  saved file information) that the Android OS automatically passes
+  	 *  when this method is called.
+  	 */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,6 +78,10 @@ public class SettingsActivity extends Activity {
         sharedPref.registerOnSharedPreferenceChangeListener(listener);
     }
     
+    /**
+     * Helper method that binds this activity to the LocationService
+     * activity. This method is called in onCreate.
+     */
     private void bindToLocationService() {
     	// Bind to LocationService
         Intent intent = new Intent(this, LocationService.class);
