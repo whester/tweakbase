@@ -1,10 +1,14 @@
 package com.example.tweakbase;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.location.LocationManager;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceFragment;
@@ -23,14 +27,15 @@ import android.util.Log;
  * will change correspond to the settings TweakBase's users will be able to change.
  */
 public class SettingsFragment extends PreferenceFragment implements OnSharedPreferenceChangeListener {
-
+	
 	final String TAG = "SettingsFragment";
 	static final String KEY_PREF_TRACK_LOCATION = "pref_trackLocation";
 	static final String KEY_TRACKING = "trackingLocation";
 	boolean trackMyLocation;
-	TBLocationListener locListener;
 	LocationManager locManager;
 	Activity settingsActivity;
+	TBLocationListener locListener;
+	BroadcastReceiver volumeReceiver;
 
 	// The minimum time between updates in milliseconds
 	private static final long TIME_BW_UPDATES = 1000 * 10; // 10 seconds
@@ -53,35 +58,43 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		addPreferencesFromResource(R.xml.preferences);
 
 		locListener = new TBLocationListener();
-
-		// Load this activity's SharedPreferences and get the saved preferences
-		SharedPreferences sharedPref = getPreferenceManager().getSharedPreferences();
-		trackMyLocation = sharedPref.getBoolean(KEY_PREF_TRACK_LOCATION, true);
-		boolean currentlyTracking = sharedPref.getBoolean(KEY_TRACKING, false);
-
+        
+		volumeReceiver = new BroadcastReceiver(){
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				AudioManager am = (AudioManager)getActivity().getSystemService(Context.AUDIO_SERVICE);
+				switch (am.getRingerMode()) {
+					case AudioManager.RINGER_MODE_SILENT:
+						Log.i("TweakBase","Silent mode");
+						break;
+					case AudioManager.RINGER_MODE_VIBRATE:
+						Log.i("TweakBase","Vibrate mode");
+						break;
+					case AudioManager.RINGER_MODE_NORMAL:
+						Log.i("TweakBase","Normal mode");
+						break;
+				}
+			}
+	      };
+	      IntentFilter filter = new IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION);
+	      getActivity().registerReceiver(volumeReceiver, filter);
+      
+	   // Load this activity's SharedPreferences and get the saved preferences
+			SharedPreferences sharedPref = getPreferenceManager().getSharedPreferences();
+			trackMyLocation = sharedPref.getBoolean(KEY_PREF_TRACK_LOCATION, true);
+			boolean currentlyTracking = sharedPref.getBoolean(KEY_TRACKING, false);
+		
+		Log.d(TAG, "In onCreate, preference read as: " + trackMyLocation);
+		
 		if (trackMyLocation && !currentlyTracking) {
 			trackLocation();
-		}    
-	}
+		}
+    }
 
-	/**
-	 * Kicks off tracking location. Called when the user wants TweakBase to track his/her location.
-	 * This method takes advantage of threads (if you don't know what threads are, ask Professor
-	 * Badass). In Android, actions that take place in the background (like noting location every 
-	 * 10 min.) are not permitted on the UI thread (the main thread an Activity runs on). 
-	 * 
-	 * So, we're creating our own thread that we can do whatever we want on. In this case, we're going 
-	 * to give the thread a LocationManager and call it's requestLocaitonUpdates() method, which notifies
-	 * a LocationListener on location updates.
-	 * 
-	 * LocationListener is an Android-defined interface with four methods. We have our own implementation,
-	 * TBLocationListener. More info in that class.
-	 */
 	private void trackLocation() {
 		Log.d(TAG, "Starting to track location");
-
 		final Handler mHandler = new Handler();
-		new Thread(new Runnable(){ public void run(){
+		Thread locationThread = new Thread(new Runnable(){ public void run(){
 			mHandler.post(new Runnable(){public void run(){
 				locManager = (LocationManager) settingsActivity.getSystemService(Context.LOCATION_SERVICE);
 				boolean isGPSEnabled = locManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
@@ -93,7 +106,8 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 					locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, TIME_BW_UPDATES, 0, locListener);
 				}
 			}});
-		}}).start();
+		}});
+		locationThread.start();
 		Log.d(TAG, "Location tracking started");
 	}
 
@@ -126,23 +140,18 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	public void onDestroy() {
 		SharedPreferences sharedPref = getPreferenceManager().getSharedPreferences();
 		sharedPref.edit().putBoolean(KEY_TRACKING, trackMyLocation).commit();
+		getActivity().unregisterReceiver(volumeReceiver);
 		super.onDestroy();
 	}
 
-
-	/**
-	 * Implemented from OnSharedPreferenceChangeListener. Called when there is a change in this Activity's
-	 * SharedPreferences.
-	 * 
-	 * @param sharedPreferences		the SharedPreferences object that was changed.
-	 * @param key					the key within sharedPreferences that was changed.
-	 */
 	@Override
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
 			String key) {
 		if (key.equals(KEY_PREF_TRACK_LOCATION)) {
+			Log.d(TAG, "Location tracking preference changed");
 			trackMyLocation = sharedPreferences.getBoolean(KEY_PREF_TRACK_LOCATION, true);
-
+			Log.d(TAG, "In onCreate, preference read as: " + trackMyLocation);
+			
 			if (!trackMyLocation) {
 				if (locManager != null) {
 					locManager.removeUpdates(locListener);
@@ -153,5 +162,5 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 			}
 		}
 	}
-
+    
 }

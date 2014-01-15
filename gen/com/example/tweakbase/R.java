@@ -34,6 +34,7 @@ public final class R {
         public static final int app_name=0x7f050000;
         public static final int hello_world=0x7f050002;
         public static final int pref_trackLocation=0x7f050003;
+        public static final int track_ringerMode=0x7f050004;
     }
     public static final class style {
         /** 
