@@ -25,6 +25,8 @@ import android.util.Log;
  * implementers to override the onSharedPreferenceChanged method, which is automatically called by the
  * Android OS whenever an element in this activity's SharedPreferences is changed. The elements that
  * will change correspond to the settings TweakBase's users will be able to change.
+ * 
+ * @author Will Hester
  */
 public class SettingsFragment extends PreferenceFragment implements OnSharedPreferenceChangeListener {
 
