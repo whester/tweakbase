@@ -10,6 +10,8 @@ import android.os.Handler;
 import android.preference.PreferenceFragment;
 import android.util.Log;
 
+// TODO: Comment on this, allow for use when GPS is not on
+
 public class SettingsFragment extends PreferenceFragment implements OnSharedPreferenceChangeListener {
 	
 	final String TAG = "SettingsFragment";
@@ -86,7 +88,6 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 				trackLocation();
 			}
 		}
-		
 	}
     
 }
