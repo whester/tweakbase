@@ -28,10 +28,8 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	final String TAG = "SettingsFragment";
 	static final String KEY_PREF_TRACK_LOCATION = "pref_trackLocation";
 	boolean trackMyLocation;
-	LocationManager locManager;
 	TBLocationListener locListener;
-	Thread locationThread;
-	boolean threadCreated;
+	LocationManager locManager;
 
 	// The minimum time between updates in milliseconds
 	private static final long TIME_BW_UPDATES = 1000 * 10; // 10 seconds
@@ -79,16 +77,13 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		Log.d(TAG, "Starting to track location");
 
 		final Handler mHandler = new Handler();
-		locationThread = new Thread(new Runnable(){ public void run(){
+		new Thread(new Runnable(){ public void run(){
 			mHandler.post(new Runnable(){public void run(){
-				Log.d(TAG, "Creating locManager");
 				locManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
 				// Requests location updates. Android OS knows to call upon locListener every TIME_BW_UPDATES ms
 				locManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, TIME_BW_UPDATES, 0, locListener);
 			}});
-		}});
-		locationThread.start();
-
+		}}).start();
 		Log.d(TAG, "Location tracking started");
 	}
 
@@ -122,9 +117,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
 			String key) {
 		if (key.equals(KEY_PREF_TRACK_LOCATION)) {
-			Log.d(TAG, "Location tracking preference changed");
 			trackMyLocation = sharedPreferences.getBoolean(KEY_PREF_TRACK_LOCATION, true);
-			Log.d(TAG, "In onCreate, preference read as: " + trackMyLocation);
 
 			if (!trackMyLocation) {
 				if (locManager != null) {
