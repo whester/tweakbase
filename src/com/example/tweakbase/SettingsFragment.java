@@ -1,5 +1,6 @@
 package com.example.tweakbase;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
@@ -8,8 +9,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceFragment;
 import android.util.Log;
-
-// TODO: Comment on this, allow for use when GPS is not on, save settings
 
 /**
  * This class is the meat of SettingsActivity. It handles displaying TweakBase's preferences and 
@@ -27,9 +26,11 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 
 	final String TAG = "SettingsFragment";
 	static final String KEY_PREF_TRACK_LOCATION = "pref_trackLocation";
+	static final String KEY_TRACKING = "trackingLocation";
 	boolean trackMyLocation;
 	TBLocationListener locListener;
 	LocationManager locManager;
+	Activity settingsActivity;
 
 	// The minimum time between updates in milliseconds
 	private static final long TIME_BW_UPDATES = 1000 * 10; // 10 seconds
@@ -46,6 +47,8 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+		settingsActivity = getActivity();
+
 		// Load the preferences from an XML resource
 		addPreferencesFromResource(R.xml.preferences);
 
@@ -54,8 +57,9 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		// Load this activity's SharedPreferences and get the saved preferences
 		SharedPreferences sharedPref = getPreferenceManager().getSharedPreferences();
 		trackMyLocation = sharedPref.getBoolean(KEY_PREF_TRACK_LOCATION, true);
+		boolean currentlyTracking = sharedPref.getBoolean(KEY_TRACKING, false);
 
-		if (trackMyLocation) {
+		if (trackMyLocation && !currentlyTracking) {
 			trackLocation();
 		}    
 	}
@@ -79,7 +83,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		final Handler mHandler = new Handler();
 		new Thread(new Runnable(){ public void run(){
 			mHandler.post(new Runnable(){public void run(){
-				locManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
+				locManager = (LocationManager) settingsActivity.getSystemService(Context.LOCATION_SERVICE);
 				boolean isGPSEnabled = locManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
 				if (isGPSEnabled) {
 					// Requests location updates from GPS. Android OS knows to call upon locListener every TIME_BW_UPDATES ms
@@ -93,7 +97,8 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		Log.d(TAG, "Location tracking started");
 	}
 
-	 /** Overridden from PreferenceFragment. Automatically called by the Android OS. Necessary to notify
+	/** 
+	 * Overridden from PreferenceFragment. Automatically called by the Android OS. Necessary to notify
 	 * changes to SharedPreferences to whoever needs it.
 	 */
 	@Override
@@ -103,7 +108,8 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 
 	}
 
-	 /** Overridden from PreferenceFragment. Automatically called by the Android OS. Necessary to notify
+	/** 
+	 * Overridden from PreferenceFragment. Automatically called by the Android OS. Necessary to notify
 	 * changes to SharedPreferences to whoever needs it.
 	 */
 	@Override
@@ -111,6 +117,18 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		getPreferenceManager().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
 		super.onPause();
 	}
+	
+	/**
+	 * Overridden from PreferenceFragment. Automatically called by the Android OS. Also called when screen
+	 * orientation changes. This saves rather or not the app is currently tracking location.
+	 */
+	@Override
+	public void onDestroy() {
+		SharedPreferences sharedPref = getPreferenceManager().getSharedPreferences();
+		sharedPref.edit().putBoolean(KEY_TRACKING, trackMyLocation).commit();
+		super.onDestroy();
+	}
+
 
 	/**
 	 * Implemented from OnSharedPreferenceChangeListener. Called when there is a change in this Activity's
