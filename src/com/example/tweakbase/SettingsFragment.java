@@ -27,11 +27,12 @@ import android.util.Log;
  * will change correspond to the settings TweakBase's users will be able to change.
  */
 public class SettingsFragment extends PreferenceFragment implements OnSharedPreferenceChangeListener {
-	
+
 	final String TAG = "SettingsFragment";
 	static final String KEY_PREF_TRACK_LOCATION = "pref_trackLocation";
 	static final String KEY_TRACKING = "trackingLocation";
 	boolean trackMyLocation;
+	boolean currentlyTracking;
 	LocationManager locManager;
 	Activity settingsActivity;
 	TBLocationListener locListener;
@@ -58,57 +59,57 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		addPreferencesFromResource(R.xml.preferences);
 
 		locListener = new TBLocationListener();
-        
+
 		volumeReceiver = new BroadcastReceiver(){
 			@Override
 			public void onReceive(Context context, Intent intent) {
 				AudioManager am = (AudioManager)getActivity().getSystemService(Context.AUDIO_SERVICE);
 				switch (am.getRingerMode()) {
-					case AudioManager.RINGER_MODE_SILENT:
-						Log.i("TweakBase","Silent mode");
-						break;
-					case AudioManager.RINGER_MODE_VIBRATE:
-						Log.i("TweakBase","Vibrate mode");
-						break;
-					case AudioManager.RINGER_MODE_NORMAL:
-						Log.i("TweakBase","Normal mode");
-						break;
+				case AudioManager.RINGER_MODE_SILENT:
+					Log.i("TweakBase","Silent mode");
+					break;
+				case AudioManager.RINGER_MODE_VIBRATE:
+					Log.i("TweakBase","Vibrate mode");
+					break;
+				case AudioManager.RINGER_MODE_NORMAL:
+					Log.i("TweakBase","Normal mode");
+					break;
 				}
 			}
-	      };
-	      IntentFilter filter = new IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION);
-	      getActivity().registerReceiver(volumeReceiver, filter);
-      
-	   // Load this activity's SharedPreferences and get the saved preferences
-			SharedPreferences sharedPref = getPreferenceManager().getSharedPreferences();
-			trackMyLocation = sharedPref.getBoolean(KEY_PREF_TRACK_LOCATION, true);
-			boolean currentlyTracking = sharedPref.getBoolean(KEY_TRACKING, false);
-		
-		Log.d(TAG, "In onCreate, preference read as: " + trackMyLocation);
-		
-		if (trackMyLocation && !currentlyTracking) {
+		};
+		IntentFilter filter = new IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION);
+		getActivity().registerReceiver(volumeReceiver, filter);
+
+		// Load this activity's SharedPreferences and get the saved preferences
+		SharedPreferences sharedPref = getPreferenceManager().getSharedPreferences();
+		trackMyLocation = sharedPref.getBoolean(KEY_PREF_TRACK_LOCATION, true);
+		currentlyTracking = sharedPref.getBoolean(KEY_TRACKING, false);
+
+		if (trackMyLocation) {
 			trackLocation();
 		}
-    }
+	}
 
 	private void trackLocation() {
-		Log.d(TAG, "Starting to track location");
-		final Handler mHandler = new Handler();
-		Thread locationThread = new Thread(new Runnable(){ public void run(){
-			mHandler.post(new Runnable(){public void run(){
-				locManager = (LocationManager) settingsActivity.getSystemService(Context.LOCATION_SERVICE);
-				boolean isGPSEnabled = locManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-				if (isGPSEnabled) {
-					// Requests location updates from GPS. Android OS knows to call upon locListener every TIME_BW_UPDATES ms
-					locManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, TIME_BW_UPDATES, 0, locListener);
-				} else {
-					// Requests location updates from network.
-					locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, TIME_BW_UPDATES, 0, locListener);
-				}
+		if (!currentlyTracking) {
+			Log.d(TAG, "Starting to track location");
+			final Handler mHandler = new Handler();
+			Thread locationThread = new Thread(new Runnable(){ public void run(){
+				mHandler.post(new Runnable(){public void run(){
+					locManager = (LocationManager) settingsActivity.getSystemService(Context.LOCATION_SERVICE);
+					boolean isGPSEnabled = locManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+					if (isGPSEnabled) {
+						// Requests location updates from GPS. Android OS knows to call upon locListener every TIME_BW_UPDATES ms
+						locManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, TIME_BW_UPDATES, 0, locListener);
+					} else {
+						// Requests location updates from network.
+						locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, TIME_BW_UPDATES, 0, locListener);
+					}
+				}});
 			}});
-		}});
-		locationThread.start();
-		Log.d(TAG, "Location tracking started");
+			locationThread.start();
+			Log.d(TAG, "Location tracking started");
+		}
 	}
 
 	/** 
@@ -131,7 +132,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		getPreferenceManager().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
 		super.onPause();
 	}
-	
+
 	/**
 	 * Overridden from PreferenceFragment. Automatically called by the Android OS. Also called when screen
 	 * orientation changes. This saves rather or not the app is currently tracking location.
@@ -151,7 +152,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 			Log.d(TAG, "Location tracking preference changed");
 			trackMyLocation = sharedPreferences.getBoolean(KEY_PREF_TRACK_LOCATION, true);
 			Log.d(TAG, "In onCreate, preference read as: " + trackMyLocation);
-			
+
 			if (!trackMyLocation) {
 				if (locManager != null) {
 					locManager.removeUpdates(locListener);
@@ -162,5 +163,5 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 			}
 		}
 	}
-    
+
 }
