@@ -31,10 +31,17 @@ import android.util.Log;
 public class SettingsFragment extends PreferenceFragment implements OnSharedPreferenceChangeListener {
 
 	final String TAG = "SettingsFragment";
-	static final String KEY_PREF_TRACK_LOCATION = "pref_trackLocation";
+	
+	static final String KEY_PREF_TRACK_LOCATION = "pref_trackLocation";	
 	static final String KEY_TRACKING = "trackingLocation";
 	boolean trackMyLocation;
 	boolean currentlyTracking;
+	
+	static final String KEY_PREF_TRACK_RINGERMODE = "pref_trackRingerMode";
+	static final String KEY_RINGERMODE = "trackingRingerMode";
+	boolean trackMyRingerMode;
+	boolean currentlyTrackingRingerMode;
+	
 	LocationManager locManager;
 	Activity settingsActivity;
 	TBLocationListener locListener;
@@ -62,33 +69,20 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 
 		locListener = new TBLocationListener();
 
-		volumeReceiver = new BroadcastReceiver(){
-			@Override
-			public void onReceive(Context context, Intent intent) {
-				AudioManager am = (AudioManager)getActivity().getSystemService(Context.AUDIO_SERVICE);
-				switch (am.getRingerMode()) {
-				case AudioManager.RINGER_MODE_SILENT:
-					Log.i("TweakBase","Silent mode");
-					break;
-				case AudioManager.RINGER_MODE_VIBRATE:
-					Log.i("TweakBase","Vibrate mode");
-					break;
-				case AudioManager.RINGER_MODE_NORMAL:
-					Log.i("TweakBase","Normal mode");
-					break;
-				}
-			}
-		};
-		IntentFilter filter = new IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION);
-		getActivity().registerReceiver(volumeReceiver, filter);
-
 		// Load this activity's SharedPreferences and get the saved preferences
 		SharedPreferences sharedPref = getPreferenceManager().getSharedPreferences();
 		trackMyLocation = sharedPref.getBoolean(KEY_PREF_TRACK_LOCATION, true);
 		currentlyTracking = sharedPref.getBoolean(KEY_TRACKING, false);
+		
+		trackMyRingerMode = sharedPref.getBoolean(KEY_PREF_TRACK_RINGERMODE, true);
+		currentlyTrackingRingerMode = sharedPref.getBoolean(KEY_RINGERMODE, false);
 
 		if (trackMyLocation) {
 			trackLocation();
+		}
+		
+		if (trackMyRingerMode){
+			trackRingerMode();
 		}
 	}
 
@@ -111,6 +105,34 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 			}});
 			locationThread.start();
 			Log.d(TAG, "Location tracking started");
+		}
+	}
+	
+	private void trackRingerMode() {
+		if (!currentlyTrackingRingerMode) {
+			Log.d(TAG, "Starting to track ringer mode");
+			
+			volumeReceiver = new BroadcastReceiver(){
+				@Override
+				public void onReceive(Context context, Intent intent) {
+					AudioManager am = (AudioManager)getActivity().getSystemService(Context.AUDIO_SERVICE);
+					switch (am.getRingerMode()) {
+					case AudioManager.RINGER_MODE_SILENT:
+						Log.i(TAG, "Phone is in Silent mode");
+						break;
+					case AudioManager.RINGER_MODE_VIBRATE:
+						Log.i(TAG, "Phone is in Vibrate mode");
+						break;
+					case AudioManager.RINGER_MODE_NORMAL:
+						Log.i(TAG, "Phone is in Normal mode");
+						break;
+					}
+				}
+			};
+			IntentFilter filter = new IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION);
+			getActivity().registerReceiver(volumeReceiver, filter);
+			
+			Log.d(TAG, "Ringer mode tracking started");
 		}
 	}
 
@@ -143,6 +165,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	public void onDestroy() {
 		SharedPreferences sharedPref = getPreferenceManager().getSharedPreferences();
 		sharedPref.edit().putBoolean(KEY_TRACKING, trackMyLocation).commit();
+		sharedPref.edit().putBoolean(KEY_RINGERMODE, trackMyRingerMode).commit();
 		getActivity().unregisterReceiver(volumeReceiver);
 		super.onDestroy();
 	}
@@ -162,6 +185,20 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 				Log.d(TAG, "Locaiton tracking stopped");
 			} else {
 				trackLocation();
+			}
+		}
+		if (key.equals(KEY_PREF_TRACK_RINGERMODE)) {
+			Log.d(TAG, "Ringer mode tracking preference changed");
+			trackMyRingerMode = sharedPreferences.getBoolean(KEY_PREF_TRACK_RINGERMODE, true);
+			Log.d(TAG, "In onCreate, RingerMode preference read as: " + trackMyRingerMode);
+
+			if (!trackMyRingerMode) {
+				if(volumeReceiver != null){
+					getActivity().unregisterReceiver(volumeReceiver);
+				}
+				Log.d(TAG, "Ringer mode tracking stopped");
+			} else {
+				trackRingerMode();
 			}
 		}
 	}
