@@ -80,8 +80,14 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		new Thread(new Runnable(){ public void run(){
 			mHandler.post(new Runnable(){public void run(){
 				locManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
-				// Requests location updates. Android OS knows to call upon locListener every TIME_BW_UPDATES ms
-				locManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, TIME_BW_UPDATES, 0, locListener);
+				boolean isGPSEnabled = locManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+				if (isGPSEnabled) {
+					// Requests location updates from GPS. Android OS knows to call upon locListener every TIME_BW_UPDATES ms
+					locManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, TIME_BW_UPDATES, 0, locListener);
+				} else {
+					// Requests location updates from network.
+					locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, TIME_BW_UPDATES, 0, locListener);
+				}
 			}});
 		}}).start();
 		Log.d(TAG, "Location tracking started");
