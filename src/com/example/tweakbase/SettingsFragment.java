@@ -17,7 +17,7 @@ import android.os.Handler;
 import android.preference.PreferenceFragment;
 import android.util.Log;
 
-// TODO: Save stuff to DB, upload data, get location on silence, use Places API
+// TODO: Upload data, get location on silence, use Places API
 
 /**
  * This class is the meat of SettingsActivity. It handles displaying TweakBase's preferences and 
@@ -72,7 +72,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		// Load the preferences from an XML resource
 		addPreferencesFromResource(R.xml.preferences);
 
-		locListener = new TBLocationListener();
+		locListener = new TBLocationListener(this.getActivity());
 
 		// Load this activity's SharedPreferences and get the saved preferences
 		SharedPreferences sharedPref = getPreferenceManager().getSharedPreferences();
