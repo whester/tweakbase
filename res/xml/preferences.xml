@@ -7,7 +7,7 @@
     
     <CheckBoxPreference
         android:key="track_ringerMode"
-        android:title="@string/track_ringerMode"
+        android:title="@string/pref_trackRingerMode"
         android:defaultValue="true"/>
     
 </PreferenceScreen>
