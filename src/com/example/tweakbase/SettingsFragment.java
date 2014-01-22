@@ -1,5 +1,8 @@
 package com.example.tweakbase;
 
+import java.util.Calendar;
+import java.util.Date;
+
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -13,6 +16,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceFragment;
 import android.util.Log;
+
+// TODO: Save stuff to DB, upload data, get location on silence, use Places API
 
 /**
  * This class is the meat of SettingsActivity. It handles displaying TweakBase's preferences and 
@@ -92,14 +97,38 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		}
 	}
 
+	/**
+	 * Kicks off tracking location. Called when the user wants TweakBase to track his/her location.
+	 * This method takes advantage of threads (if you don't know what threads are, ask Professor
+	 * Badass). In Android, actions that take place in the background (like recording location every 
+	 * 10 min.) are not permitted on the UI thread (the main thread an Activity runs on). 
+	 * 
+	 * So, we're creating our own thread that we can do whatever we want on. In this case, we're going 
+	 * to give the thread a LocationManager and call its requestLocaitonUpdates() method, which notifies
+	 * a LocationListener on location updates.
+	 * 
+	 * LocationListener is an Android-defined interface with four methods. We have our own implementation,
+	 * TBLocationListener. More info in that class.
+	 */
 	private void trackLocation() {
 		if (!currentlyTracking) {
 			Log.d(TAG, "Starting to track location");
+			// We want to get updates every time the clock ends in a 0 or a 5 (every five minutes).
+			// This sleeps the thread until the next time that happens
+			Calendar c = Calendar.getInstance();
+			Date now = new Date();
+			c.setTime(now);
+			int unroundedMinutes = c.get(Calendar.MINUTE);
+			int mod = unroundedMinutes % 5;
+			c.add(Calendar.MINUTE, mod == 0 ? 5 : 5 - mod);
+			c.set(Calendar.SECOND, 0);
+			c.set(Calendar.MILLISECOND, 0);
+			final long timeToWait = (c.getTimeInMillis()-now.getTime());
 			final Handler mHandler = new Handler();
 			Thread locationThread = new Thread(new Runnable(){ public void run(){
-				mHandler.post(new Runnable(){public void run(){
+				mHandler.postDelayed(new Runnable(){ public void run() {
 					locManager = (LocationManager) settingsActivity.getSystemService(Context.LOCATION_SERVICE);
-					boolean isGPSEnabled = locManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+					boolean isGPSEnabled = locManager.isProviderEnabled(LocationManager.GPS_PROVIDER);				
 					if (isGPSEnabled) {
 						// Requests location updates from GPS. Android OS knows to call upon locListener every TIME_BW_UPDATES ms
 						locManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, TIME_BW_UPDATES, 0, locListener);
@@ -107,10 +136,11 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 						// Requests location updates from network.
 						locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, TIME_BW_UPDATES, 0, locListener);
 					}
-				}});
+					Log.d(TAG, "Location tracking started");
+				}}, timeToWait);
 			}});
 			locationThread.start();
-			Log.d(TAG, "Location tracking started");
+			Log.d(TAG, "Sleeping until..." + c.getTime());
 		}
 	}
 
