@@ -15,6 +15,7 @@ import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceFragment;
+import android.provider.Settings.Secure;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -110,14 +111,15 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		v.addView(btn);
 		btn.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				DatabaseHandler.exportDatabse(DatabaseHandler.DATABASE_NAME);
+				String androidId = Secure.getString(settingsActivity.getContentResolver(), Secure.ANDROID_ID); 
+				final String backupDBPath = DatabaseHandler.exportDatabse(DatabaseHandler.DATABASE_NAME, androidId);
 				/* You can't do data actions on the main thread, so instead we create a new thread to
 				 * take care of the uploading of the database.
 				 */
 				new Thread(new Runnable(){
 				    public void run()
 				    {
-				    	HttpFileUpload.UploadFile("/backupname.db");
+				    	HttpFileUpload.UploadFile("/backupname.db", backupDBPath);
 				    }
 				}).start();
 			}

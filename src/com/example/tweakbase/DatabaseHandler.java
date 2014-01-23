@@ -97,19 +97,20 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 	}
 	
 	/**
-	 * Saves the passed database to the phone under the name "backupname.db"
+	 * Saves the passed database to the phone under the name "backup" then your unique
+	 * android device ID, then ".db"
 	 * 
 	 * @param databaseName	Specifies which database you want saved to the file
 	 * backupname.db. Most likely, this parameter is DatabaseHandler.DATABASE_NAME
 	 */
-	public static void exportDatabse(String databaseName) {
+	public static String exportDatabse(String databaseName, String androidId) {
         try {
             File sd = Environment.getExternalStorageDirectory();
             File data = Environment.getDataDirectory();
 
             if (sd.canWrite()) {
                 String currentDBPath = "//data//"+"com.example.tweakbase"+"//databases//"+databaseName+"";
-                String backupDBPath = "backupname.db";
+                String backupDBPath = "backup" + androidId + ".db";
                 File currentDB = new File(data, currentDBPath);
                 File backupDB = new File(sd, backupDBPath);
 
@@ -120,9 +121,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                     src.close();
                     dst.close();
                 }
+                return backupDBPath;
             }
         } catch (Exception e) {
         	Log.e("DatabaseHandler", e.getMessage());
         }
+        return "";
     }
 }
