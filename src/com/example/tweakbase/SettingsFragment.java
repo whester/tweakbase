@@ -16,6 +16,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceFragment;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.LinearLayout;
 
 // TODO: Upload data, get location on silence, use Places API
 
@@ -36,17 +41,17 @@ import android.util.Log;
 public class SettingsFragment extends PreferenceFragment implements OnSharedPreferenceChangeListener {
 
 	final String TAG = "SettingsFragment";
-	
+
 	static final String KEY_PREF_TRACK_LOCATION = "pref_trackLocation";	
 	static final String KEY_TRACKING = "trackingLocation";
 	boolean trackMyLocation;
 	boolean currentlyTracking;
-	
+
 	static final String KEY_PREF_TRACK_RINGERMODE = "pref_trackRingerMode";
 	static final String KEY_RINGERMODE = "trackingRingerMode";
 	boolean trackMyRingerMode;
 	boolean currentlyTrackingRingerMode;
-	
+
 	LocationManager locManager;
 	Activity settingsActivity;
 	TBLocationListener locListener;
@@ -78,18 +83,49 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		SharedPreferences sharedPref = getPreferenceManager().getSharedPreferences();
 		trackMyLocation = sharedPref.getBoolean(KEY_PREF_TRACK_LOCATION, true);
 		currentlyTracking = sharedPref.getBoolean(KEY_TRACKING, false);
-		
+
 		trackMyRingerMode = sharedPref.getBoolean(KEY_PREF_TRACK_RINGERMODE, true);
 		currentlyTrackingRingerMode = sharedPref.getBoolean(KEY_RINGERMODE, false);
 
 		if (trackMyLocation) {
 			trackLocation();
 		}
-		
+
 		if (trackMyRingerMode){
 			trackRingerMode();
 		}
 	}
+
+	/**
+	 * This creates us a nice button at the bottom of the settings page that allows us to upload your
+	 * TweakBase database to http://whester.com/tweakbase/uploads
+	 */
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		LinearLayout v = (LinearLayout) super.onCreateView(inflater, container, savedInstanceState);
+
+		Button btn = new Button(getActivity().getApplicationContext());
+		btn.setText("Click to upload database");
+
+		v.addView(btn);
+		btn.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				DatabaseHandler.exportDatabse(DatabaseHandler.DATABASE_NAME);
+				/* You can't do data actions on the main thread, so instead we create a new thread to
+				 * take care of the uploading of the database.
+				 */
+				new Thread(new Runnable(){
+				    public void run()
+				    {
+				    	HttpFileUpload.UploadFile("/backupname.db");
+				    }
+				}).start();
+			}
+		});
+
+		return v;
+	}
+
 
 	/**
 	 * Kicks off tracking location. Called when the user wants TweakBase to track his/her location.
@@ -107,14 +143,15 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	private void trackLocation() {
 		if (!currentlyTracking) {
 			Log.d(TAG, "Starting to track location");
+
 			// We want to get updates every time the clock ends in a 0 or a 5 (every five minutes).
 			// This sleeps the thread until the next time that happens
 			Calendar c = Calendar.getInstance();
 			Date now = new Date();
 			c.setTime(now);
 			int unroundedMinutes = c.get(Calendar.MINUTE);
-			int mod = unroundedMinutes % 5;
-			c.add(Calendar.MINUTE, mod == 0 ? 5 : 5 - mod);
+			int mod = unroundedMinutes % 1;	// TODO: Change these 1's to 5's!
+			c.add(Calendar.MINUTE, mod == 0 ? 1 : 1 - mod);
 			c.set(Calendar.SECOND, 0);
 			c.set(Calendar.MILLISECOND, 0);
 			final long timeToWait = (c.getTimeInMillis()-now.getTime());
@@ -137,11 +174,11 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 			Log.d(TAG, "Sleeping until..." + c.getTime());
 		}
 	}
-	
+
 	private void trackRingerMode() {
 		if (!currentlyTrackingRingerMode) {
 			Log.d(TAG, "Starting to track ringer mode");
-			
+
 			volumeReceiver = new BroadcastReceiver(){
 				@Override
 				public void onReceive(Context context, Intent intent) {
@@ -161,7 +198,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 			};
 			IntentFilter filter = new IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION);
 			getActivity().registerReceiver(volumeReceiver, filter);
-			
+
 			Log.d(TAG, "Ringer mode tracking started");
 		}
 	}
@@ -204,9 +241,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
 			String key) {
 		if (key.equals(KEY_PREF_TRACK_LOCATION)) {
-			Log.d(TAG, "Location tracking preference changed");
 			trackMyLocation = sharedPreferences.getBoolean(KEY_PREF_TRACK_LOCATION, true);
-			Log.d(TAG, "In onCreate, preference read as: " + trackMyLocation);
 
 			if (!trackMyLocation) {
 				if (locManager != null) {
@@ -232,5 +267,4 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 			}
 		}
 	}
-
 }

@@ -3,11 +3,11 @@
     <CheckBoxPreference
         android:key="pref_trackLocation"
         android:title="@string/pref_trackLocation"
-        android:defaultValue="true" />
+        android:defaultValue="false" />
     
     <CheckBoxPreference
         android:key="track_ringerMode"
         android:title="@string/pref_trackRingerMode"
-        android:defaultValue="true"/>
+        android:defaultValue="false"/>
     
 </PreferenceScreen>

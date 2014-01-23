@@ -1,11 +1,14 @@
 package com.example.tweakbase;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.Calendar;
 
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 
 public class TBLocationListener implements LocationListener {
@@ -20,7 +23,7 @@ public class TBLocationListener implements LocationListener {
 	@Override
 	public void onLocationChanged(Location location) {	
 		Calendar c = Calendar.getInstance();
-		db.addLocation(new TBLocation(location.getLatitude(), location.getLatitude(), c.get(Calendar.DAY_OF_WEEK)));
+		db.addLocation(new TBLocation(location.getLatitude(), location.getLongitude(), c.get(Calendar.DAY_OF_WEEK)));
 		Log.d(TAG, "SQLite num. entries: " + db.getAllLocations().size());
 		Log.d(TAG, "DOW: " + db.getAllLocations().get(0).getDayOfWeek());
 		Log.d(TAG, "Latitude: "+ location.getLatitude()+" Longitude: "+ location.getLongitude());
