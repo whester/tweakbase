@@ -22,6 +22,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 // TODO: Upload data, get location on silence, use Places API
 
@@ -113,6 +114,10 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 			public void onClick(View v) {
 				String androidId = Secure.getString(settingsActivity.getContentResolver(), Secure.ANDROID_ID); 
 				final String backupDBPath = DatabaseHandler.exportDatabse(DatabaseHandler.DATABASE_NAME, androidId);
+				
+				Toast toast = Toast.makeText(settingsActivity, "Uploading now. Your Android ID is " + androidId, Toast.LENGTH_LONG);
+				toast.show();
+				
 				/* You can't do data actions on the main thread, so instead we create a new thread to
 				 * take care of the uploading of the database.
 				 */
