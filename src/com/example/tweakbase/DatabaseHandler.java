@@ -7,6 +7,7 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -26,6 +27,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
 	// Table name
 	private static final String TABLE_LOCATION = "location";
+	//Ringer Mode Table
+	private static final String TABLE_RINGERMODE = "ringermode";
 
 	// Table Columns names
 	private static final String KEY_LOC_ID = "location_id";
@@ -34,6 +37,14 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
 	private static final String KEY_LOC_INTERVAL_ID = "location_interval_id";
 	private static final String KEY_LOC_DAY_OF_WEEK = "location_day_of_week";
+	
+	//Ringer Mode Table Columns names
+	private static final String KEY_RM_ID = "ringermode_id";
+	private static final String KEY_RM_INTERVAL_ID = "ringermode_interval_id";		
+	private static final String KEY_RM_DAY_OF_WEEK = "ringermode_dayofweek";
+	private static final String KEY_RM_LAT = "ringermode_lat";
+	private static final String KEY_RM_LON = "ringermode_lon";
+	private static final String KEY_RM_TYPE = "ringermode_type";
 
 	public DatabaseHandler(Context context) {
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -47,6 +58,12 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 				+ KEY_LOC_LON + " DOUBLE" + "," + KEY_LOC_INTERVAL_ID + " INTEGER,"
 				+ KEY_LOC_DAY_OF_WEEK + " INTEGER" + ")";
 		db.execSQL(CREATE_CONTACTS_TABLE);
+		
+		String CREATE_RINGERMODE_TABLE = "CREATE TABLE " + TABLE_RINGERMODE + "("
+				+ KEY_RM_ID + " INTEGER PRIMARY KEY," + KEY_RM_INTERVAL_ID + " INTEGER,"
+				+ KEY_RM_DAY_OF_WEEK + " INTEGER," + KEY_RM_LAT + " DOUBLE," + KEY_RM_LON
+				+ " DOUBLE," + KEY_RM_TYPE + " INTEGER" + ")";
+		db.execSQL(CREATE_RINGERMODE_TABLE);
 	}
 
 	// Upgrading database
@@ -71,6 +88,20 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 		// Inserting Row
 		db.insert(TABLE_LOCATION, null, values);
 		db.close(); // Closing database connection
+	}
+	
+	public void addRingermode(TBRingermode ringermode){
+		SQLiteDatabase db = this.getWritableDatabase();
+		
+		ContentValues values = new ContentValues();
+		values.put(KEY_RM_DAY_OF_WEEK, ringermode.getDayOfWeek());
+		values.put(KEY_RM_INTERVAL_ID, ringermode.getIntervalId());
+		values.put(KEY_RM_LAT, ringermode.getLatitude());
+		values.put(KEY_RM_LON, ringermode.getLongitude());
+		values.put(KEY_RM_TYPE, ringermode.getType());
+		
+		db.insert(TABLE_RINGERMODE, null, values);
+		db.close();
 	}
 
 	public List<TBLocation> getAllLocations() {
