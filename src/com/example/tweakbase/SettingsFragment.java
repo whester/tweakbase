@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.location.Location;
 import android.location.LocationManager;
 import android.media.AudioManager;
 import android.os.Bundle;
@@ -181,15 +182,20 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 			Log.d(TAG, "Sleeping until..." + c.getTime());
 		}
 	}
-	DatabaseHandler db;
+	
 	private void trackRingerMode() {
+		final DatabaseHandler db = new DatabaseHandler(settingsActivity);
+		LocationManager lm = (LocationManager)settingsActivity.getSystemService(Context.LOCATION_SERVICE); 
+		Location location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+		final double longitude = location.getLongitude();
+		final double latitude = location.getLatitude();
 		if (!currentlyTrackingRingerMode) {
 			Log.d(TAG, "Starting to track ringer mode");
 			volumeReceiver = new BroadcastReceiver(){
 				@Override
 				public void onReceive(Context context, Intent intent) {
 					AudioManager am = (AudioManager)getActivity().getSystemService(Context.AUDIO_SERVICE);
-					db.addRingermode(new TBRingermode(3.45,1.22,2,am.getRingerMode()));
+					db.addRingermode(new TBRingermode(latitude,longitude,Calendar.DAY_OF_WEEK,am.getRingerMode()));
 					switch (am.getRingerMode()) {
 					case AudioManager.RINGER_MODE_SILENT:
 						Log.i(TAG, "Phone is in Silent mode");
