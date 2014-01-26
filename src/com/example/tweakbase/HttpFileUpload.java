@@ -145,13 +145,13 @@ public class HttpFileUpload implements Runnable{
                 // TODO Auto-generated method stub
         }
         
-        public static void UploadFile(String filePath, String backupDBPath){
+        public static void UploadFile(String filePath){
         	try {
         	    // Set your file path here
-        	    FileInputStream fstrm = new FileInputStream(Environment.getExternalStorageDirectory().toString() + filePath);       	  
+        	    FileInputStream fstrm = new FileInputStream(Environment.getExternalStorageDirectory().toString() + "/" + filePath);       	  
 
         	    // Set your server page url (and the file title/description)
-        	    HttpFileUpload hfu = new HttpFileUpload("http://whester.com/tweakbase/upload.php", backupDBPath,"SQLite DB");
+        	    HttpFileUpload hfu = new HttpFileUpload("http://whester.com/tweakbase/upload.php", filePath,"SQLite DB");
         	    
         	    hfu.Send_Now(fstrm);
         	    

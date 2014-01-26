@@ -119,7 +119,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 				new Thread(new Runnable(){
 				    public void run()
 				    {
-				    	HttpFileUpload.UploadFile("/backupname.db", backupDBPath);
+				    	HttpFileUpload.UploadFile(backupDBPath);
 				    }
 				}).start();
 			}
