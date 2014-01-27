@@ -194,8 +194,9 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 			volumeReceiver = new BroadcastReceiver(){
 				@Override
 				public void onReceive(Context context, Intent intent) {
+					Calendar cal = Calendar.getInstance();
 					AudioManager am = (AudioManager)getActivity().getSystemService(Context.AUDIO_SERVICE);
-					db.addRingermode(new TBRingermode(latitude,longitude,Calendar.DAY_OF_WEEK,am.getRingerMode()));
+					db.addRingermode(new TBRingermode(latitude,longitude,cal.get(Calendar.DAY_OF_WEEK),am.getRingerMode()));
 					switch (am.getRingerMode()) {
 					case AudioManager.RINGER_MODE_SILENT:
 						Log.i(TAG, "Phone is in Silent mode");
