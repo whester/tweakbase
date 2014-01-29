@@ -179,7 +179,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 				}}, timeToWait);
 			}});
 			locationThread.start();
-			Log.d(TAG, "Sleeping until..." + c.getTime());
+			Log.d(TAG, "Sleeping until... " + c.getTime());
 		}
 	}
 	
