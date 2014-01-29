@@ -39,6 +39,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
 	private static final String KEY_LOC_INTERVAL_ID = "location_interval_id";
 	private static final String KEY_LOC_DAY_OF_WEEK = "location_day_of_week";
+	private static final String KEY_LOC_TIMESTAMP = "location_timestamp";
+	
 	
 	//Ringer Mode Table Columns names
 	private static final String KEY_RM_ID = "ringermode_id";
@@ -47,6 +49,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 	private static final String KEY_RM_LAT = "ringermode_lat";
 	private static final String KEY_RM_LON = "ringermode_lon";
 	private static final String KEY_RM_TYPE = "ringermode_type";
+	private static final String KEY_RM_TIMESTAMP = "ringermode_timestamp";
 	
 	//Table ringermode_profiles
 	private static final String KEY_RMP_ID = "ringermode_profiles_id";
@@ -56,6 +59,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 	private static final String KEY_RMP_LON = "ringermode_profiles_lon";
 	private static final String KEY_RMP_TYPE = "ringermode_profiles_type";
 	private static final String KEY_RMP_ACTIVE = "ringermode_profiles_active";
+	private static final String KEY_RMP_TIMESTAMP = "ringermode_profiles_timestamp";
 
 	public DatabaseHandler(Context context) {
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -65,21 +69,33 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 	@Override
 	public void onCreate(SQLiteDatabase db) {
 		String CREATE_CONTACTS_TABLE = "CREATE TABLE " + TABLE_LOCATION + "("
-				+ KEY_LOC_ID + " INTEGER PRIMARY KEY," + KEY_LOC_LAT + " DOUBLE,"
-				+ KEY_LOC_LON + " DOUBLE" + "," + KEY_LOC_INTERVAL_ID + " INTEGER,"
-				+ KEY_LOC_DAY_OF_WEEK + " INTEGER" + ")";
+				+ KEY_LOC_ID + " INTEGER PRIMARY KEY," 
+				+ KEY_LOC_LAT + " DOUBLE,"
+				+ KEY_LOC_LON + " DOUBLE" + "," 
+				+ KEY_LOC_INTERVAL_ID + " INTEGER,"
+				+ KEY_LOC_DAY_OF_WEEK + " INTEGER," 
+				+ KEY_LOC_TIMESTAMP + " DEFAULT CURRENT_TIMESTAMP" +")";
 		db.execSQL(CREATE_CONTACTS_TABLE);
 		
 		String CREATE_RINGERMODE_TABLE = "CREATE TABLE " + TABLE_RINGERMODE + "("
-				+ KEY_RM_ID + " INTEGER PRIMARY KEY," + KEY_RM_INTERVAL_ID + " INTEGER,"
-				+ KEY_RM_DAY_OF_WEEK + " INTEGER," + KEY_RM_LAT + " DOUBLE," + KEY_RM_LON
-				+ " DOUBLE," + KEY_RM_TYPE + " INTEGER" + ")";
+				+ KEY_RM_ID + " INTEGER PRIMARY KEY,"
+				+ KEY_RM_INTERVAL_ID + " INTEGER,"
+				+ KEY_RM_DAY_OF_WEEK + " INTEGER," 
+				+ KEY_RM_LAT + " DOUBLE," 
+				+ KEY_RM_LON + " DOUBLE," 
+				+ KEY_RM_TYPE + " INTEGER," 
+				+ KEY_RM_TIMESTAMP + " DEFAULT CURRENT_TIMESTAMP" + ")";
 		db.execSQL(CREATE_RINGERMODE_TABLE);
 		
 		String CREATE_RINGERMODE_PROFILES_TABLE = "CREATE TABLE " + TABLE_RM_PROFILES + "("
-				+ KEY_RMP_ID + " INTEGER PRIMARY KEY," + KEY_RMP_INTERVAL_ID + " INTEGER,"
-				+ KEY_RMP_DAY_OF_WEEK + " INTEGER," + KEY_RMP_LAT + " DOUBLE," + KEY_RMP_LON
-				+ " DOUBLE," + KEY_RMP_TYPE + " INTEGER" + KEY_RMP_ACTIVE + " BOOLEAN" + ")";
+				+ KEY_RMP_ID + " INTEGER PRIMARY KEY," 
+				+ KEY_RMP_INTERVAL_ID + " INTEGER,"
+				+ KEY_RMP_DAY_OF_WEEK + " INTEGER," 
+				+ KEY_RMP_LAT + " DOUBLE," 
+				+ KEY_RMP_LON + " DOUBLE," 
+				+ KEY_RMP_TYPE + " INTEGER,"
+				+ KEY_RMP_ACTIVE + " BOOLEAN," 
+				+ KEY_RMP_TIMESTAMP + " DEFAULT CURRENT_TIMESTAMP" + ")";
 		db.execSQL(CREATE_RINGERMODE_PROFILES_TABLE);
 	}
 
