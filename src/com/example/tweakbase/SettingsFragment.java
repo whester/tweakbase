@@ -179,22 +179,22 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 				}}, timeToWait);
 			}});
 			locationThread.start();
-			Log.d(TAG, "Sleeping until..." + c.getTime());
+			Log.d(TAG, "Sleeping until... " + c.getTime());
 		}
 	}
 	
 	private void trackRingerMode() {
 		final DatabaseHandler db = new DatabaseHandler(settingsActivity);
-		LocationManager lm = (LocationManager)settingsActivity.getSystemService(Context.LOCATION_SERVICE); 
-		Location location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-		final double longitude = location.getLongitude();
-		final double latitude = location.getLatitude();
 		if (!currentlyTrackingRingerMode) {
 			Log.d(TAG, "Starting to track ringer mode");
 			volumeReceiver = new BroadcastReceiver(){
 				@Override
 				public void onReceive(Context context, Intent intent) {
 					Calendar cal = Calendar.getInstance();
+					LocationManager lm = (LocationManager)settingsActivity.getSystemService(Context.LOCATION_SERVICE); 
+					Location location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+					double longitude = location.getLongitude();
+					double latitude = location.getLatitude();
 					AudioManager am = (AudioManager)getActivity().getSystemService(Context.AUDIO_SERVICE);
 					db.addRingermode(new TBRingermode(latitude,longitude,cal.get(Calendar.DAY_OF_WEEK),am.getRingerMode()));
 					switch (am.getRingerMode()) {
