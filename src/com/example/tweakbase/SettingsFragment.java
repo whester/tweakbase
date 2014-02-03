@@ -177,6 +177,8 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 						locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, TIME_BW_UPDATES, 0, locListener);
 					}
 					Log.d(TAG, "Location tracking started");
+					Toast locationmodeOn = Toast.makeText(getActivity(), "Location tracking started", Toast.LENGTH_LONG);
+					locationmodeOn.show();
 				}}, timeToWait);
 			}});
 			locationThread.start();
@@ -274,6 +276,8 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 					locManager.removeUpdates(locListener);
 				}
 				Log.d(TAG, "Location tracking stopped");
+				Toast locationmodeOff = Toast.makeText(getActivity(), "Location tracking stopped", Toast.LENGTH_LONG);
+				locationmodeOff.show();
 			} else {
 				trackLocation();
 			}
