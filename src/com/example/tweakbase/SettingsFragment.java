@@ -278,8 +278,8 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 				trackLocation();
 			}
 		}
-		if (key.equals(KEY_PREF_TRACK_RINGERMODE)) {
-
+		
+		if (key.equals(KEY_PREF_TRACK_RINGERMODE)) {	
 			Log.d(TAG, "Ringer mode tracking preference changed");
 			trackMyRingerMode = sharedPreferences.getBoolean(KEY_PREF_TRACK_RINGERMODE, true);
 			Log.d(TAG, "In onCreate, RingerMode preference read as: " + trackMyRingerMode);
