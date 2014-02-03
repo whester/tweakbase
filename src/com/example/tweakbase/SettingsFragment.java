@@ -59,6 +59,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	Activity settingsActivity;
 	TBLocationListener locListener;
 	BroadcastReceiver volumeReceiver;
+	PredictVolume addPattern;
 
 	// The minimum time between updates in milliseconds
 	private static final long TIME_BW_UPDATES = 1000 * 10; // 10 seconds
@@ -206,7 +207,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 					
 					// storing everything in the database
 					db.addRingermode(new TBRingermode(latitude, longitude, cal.get(Calendar.DAY_OF_WEEK), am.getRingerMode()));
-					
+					addPattern.onPatternIdentified();
 					switch (am.getRingerMode()) {
 					case AudioManager.RINGER_MODE_SILENT:
 						Log.i(TAG, "Phone is in Silent mode");
