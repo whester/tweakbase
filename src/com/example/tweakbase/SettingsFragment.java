@@ -54,6 +54,11 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	static final String KEY_RINGERMODE = "trackingRingerMode";
 	boolean trackMyRingerMode;
 	boolean currentlyTrackingRingerMode;
+	
+	static final String KEY_PREF_TRACK_APPLICATIONS = "pref_trackApplications";
+	static final String KEY_APPLICATIONS = "trackingApplications";
+	boolean trackMyApplications;
+	boolean currentlyTrackingApplications;
 
 	LocationManager locManager;
 	Activity settingsActivity;
@@ -90,6 +95,9 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 
 		trackMyRingerMode = sharedPref.getBoolean(KEY_PREF_TRACK_RINGERMODE, true);
 		currentlyTrackingRingerMode = sharedPref.getBoolean(KEY_RINGERMODE, false);
+		
+		trackMyApplications = sharedPref.getBoolean(KEY_PREF_TRACK_APPLICATIONS, true);
+		currentlyTrackingApplications = sharedPref.getBoolean(KEY_APPLICATIONS, false);
 
 		if (trackMyLocation) {
 			trackLocation();
@@ -98,7 +106,12 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		if (trackMyRingerMode){
 			trackRingerMode();
 		}
+		
+		if (trackMyApplications){
+			trackApplications();
+		}
 	}
+
 
 	/**
 	 * This creates us a nice button at the bottom of the settings page that allows us to upload your
@@ -230,6 +243,16 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 			getActivity().registerReceiver(volumeReceiver, filter);
 		}
 	}
+	
+	
+	private void trackApplications() {
+		if(!currentlyTrackingApplications){
+			Log.d(TAG, "Applications tracking started");
+			Toast applicationsOn = Toast.makeText(getActivity(), "Applications tracking started", Toast.LENGTH_LONG);
+			applicationsOn.show();
+		}
+	}
+	
 
 	/** 
 	 * Overridden from PreferenceFragment. Automatically called by the Android OS. Necessary to notify
@@ -261,6 +284,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		SharedPreferences sharedPref = getPreferenceManager().getSharedPreferences();
 		sharedPref.edit().putBoolean(KEY_TRACKING, trackMyLocation).commit();
 		sharedPref.edit().putBoolean(KEY_RINGERMODE, trackMyRingerMode).commit();
+		sharedPref.edit().putBoolean(KEY_APPLICATIONS, trackMyApplications).commit();
 		getActivity().unregisterReceiver(volumeReceiver);
 		super.onDestroy();
 	}
@@ -297,6 +321,18 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 				ringermodeOff.show();
 			} else {
 				trackRingerMode();
+			}
+		}
+		
+		if (key.equals(KEY_PREF_TRACK_APPLICATIONS)) {	
+			trackMyApplications = sharedPreferences.getBoolean(KEY_PREF_TRACK_APPLICATIONS, true);
+
+			if (!trackMyApplications) {
+				Log.d(TAG, "Applications tracking stopped");
+				Toast applicationsOff = Toast.makeText(getActivity(), "Applications tracking stopped", Toast.LENGTH_LONG);
+				applicationsOff.show();
+			} else {
+				trackApplications();
 			}
 		}
 	}
