@@ -24,6 +24,12 @@
             </intent-filter>
         </activity>
         
+        <receiver android:name="TBLocationChangedReceiver" >
+            <intent-filter>
+                <action android:name="com.example.tweakbase.LOCATION_READY" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
         <receiver  android:process=":remote" android:name="UploadDbReceiver"></receiver>
     </application>
     

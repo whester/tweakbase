@@ -1,9 +1,9 @@
 package com.example.tweakbase;
 
 import java.util.Calendar;
-import java.util.Date;
 
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -14,7 +14,6 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.media.AudioManager;
 import android.os.Bundle;
-import android.os.Handler;
 import android.preference.PreferenceFragment;
 import android.provider.Settings.Secure;
 import android.util.Log;
@@ -163,40 +162,48 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	 * TBLocationListener. More info in that class.
 	 */
 	private void trackLocation() {
-		if (!currentlyTracking) {
-			Log.d(TAG, "Starting to track location");
-
-			// We want to get updates every time the clock ends in a 0 or a 5 (every five minutes).
-			// This sleeps the thread until the next time that happens
-			Calendar c = Calendar.getInstance();
-			Date now = new Date();
-			c.setTime(now);
-			int unroundedMinutes = c.get(Calendar.MINUTE);
-			int mod = unroundedMinutes % 1;	// TODO: Change these 1's to 5's!
-			c.add(Calendar.MINUTE, mod == 0 ? 1 : 1 - mod);
-			c.set(Calendar.SECOND, 0);
-			c.set(Calendar.MILLISECOND, 0);
-			final long timeToWait = (c.getTimeInMillis()-now.getTime());
-			final Handler mHandler = new Handler();
-			Thread locationThread = new Thread(new Runnable(){ public void run(){
-				mHandler.postDelayed(new Runnable(){ public void run() {
-					locManager = (LocationManager) settingsActivity.getSystemService(Context.LOCATION_SERVICE);
-					boolean isGPSEnabled = locManager.isProviderEnabled(LocationManager.GPS_PROVIDER);				
-					if (isGPSEnabled) {
-						// Requests location updates from GPS. Android OS knows to call upon locListener every TIME_BW_UPDATES ms
-						locManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, TIME_BW_UPDATES, 0, locListener);
-					} else {
-						// Requests location updates from network.
-						locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, TIME_BW_UPDATES, 0, locListener);
-					}
-					Log.d(TAG, "Location tracking started");
-					Toast locationmodeOn = Toast.makeText(getActivity(), "Location tracking started", Toast.LENGTH_LONG);
-					locationmodeOn.show();
-				}}, timeToWait);
-			}});
-			locationThread.start();
-			Log.d(TAG, "Sleeping until... " + c.getTime());
-		}
+		
+		LocationManager lm = (LocationManager) settingsActivity.getSystemService(Context.LOCATION_SERVICE);
+		Intent i = new Intent("com.example.tweakbase.LOCATION_READY");
+		PendingIntent pendingIntent = PendingIntent.getBroadcast(settingsActivity.getApplicationContext(),
+		    0, i, 0);
+		// Register for broadcast intents
+		lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, TIME_BW_UPDATES, 0, pendingIntent);
+		
+//		if (!currentlyTracking) {
+//			Log.d(TAG, "Starting to track location");
+//
+//			// We want to get updates every time the clock ends in a 0 or a 5 (every five minutes).
+//			// This sleeps the thread until the next time that happens
+//			Calendar c = Calendar.getInstance();
+//			Date now = new Date();
+//			c.setTime(now);
+//			int unroundedMinutes = c.get(Calendar.MINUTE);
+//			int mod = unroundedMinutes % 1;	// TODO: Change these 1's to 5's!
+//			c.add(Calendar.MINUTE, mod == 0 ? 1 : 1 - mod);
+//			c.set(Calendar.SECOND, 0);
+//			c.set(Calendar.MILLISECOND, 0);
+//			final long timeToWait = (c.getTimeInMillis()-now.getTime());
+//			final Handler mHandler = new Handler();
+//			Thread locationThread = new Thread(new Runnable(){ public void run(){
+//				mHandler.postDelayed(new Runnable(){ public void run() {
+//					locManager = (LocationManager) settingsActivity.getSystemService(Context.LOCATION_SERVICE);
+//					boolean isGPSEnabled = locManager.isProviderEnabled(LocationManager.GPS_PROVIDER);				
+//					if (isGPSEnabled) {
+//						// Requests location updates from GPS. Android OS knows to call upon locListener every TIME_BW_UPDATES ms
+//						locManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, TIME_BW_UPDATES, 0, locListener);
+//					} else {
+//						// Requests location updates from network.
+//						locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, TIME_BW_UPDATES, 0, locListener);
+//					}
+//					Log.d(TAG, "Location tracking started");
+//					Toast locationmodeOn = Toast.makeText(getActivity(), "Location tracking started", Toast.LENGTH_LONG);
+//					locationmodeOn.show();
+//				}}, timeToWait);
+//			}});
+//			locationThread.start();
+//			Log.d(TAG, "Sleeping until... " + c.getTime());
+//		}
 	}
 	
 	private void trackRingerMode() {
