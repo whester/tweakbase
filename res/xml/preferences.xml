@@ -10,4 +10,9 @@
         android:title="@string/pref_trackRingerMode"
         android:defaultValue="false"/>
     
+    <CheckBoxPreference
+        android:key="pref_trackApplications"
+        android:title="@string/pref_trackApplications"
+        android:defaultValue="false"/>
+    
 </PreferenceScreen>
