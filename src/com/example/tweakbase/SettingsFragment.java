@@ -169,6 +169,9 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		// Register for broadcast intents
 		locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, TIME_BW_UPDATES, 0, trackLocationPendingIntent);
 		
+		Toast locationmodeOn = Toast.makeText(getActivity(), "Location tracking started", Toast.LENGTH_LONG);
+		locationmodeOn.show();
+		
 //		if (!currentlyTracking) {
 //			Log.d(TAG, "Starting to track location");
 //
@@ -196,8 +199,6 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 //						locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, TIME_BW_UPDATES, 0, locListener);
 //					}
 //					Log.d(TAG, "Location tracking started");
-//					Toast locationmodeOn = Toast.makeText(getActivity(), "Location tracking started", Toast.LENGTH_LONG);
-//					locationmodeOn.show();
 //				}}, timeToWait);
 //			}});
 //			locationThread.start();
