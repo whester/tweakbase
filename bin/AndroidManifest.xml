@@ -15,7 +15,7 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name="com.example.tweakbase.SettingsActivity"
-            android:label="@string/app_name" 
+            android:label="@string/app_name"
             android:screenOrientation="portrait" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -23,12 +23,28 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <receiver android:name="TBLocationChangedReceiver" >
+            <intent-filter>
+                <action android:name="com.example.tweakbase.LOCATION_READY" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="UploadDbReceiver"
+            android:process=":remote" >
+        </receiver>
+        <receiver
+            android:name="AppTrackerReceiver">
+        </receiver>
         
-        <receiver  android:process=":remote" android:name="UploadDbReceiver"></receiver>
+        <service android:enabled="true" android:name="AppTrackerService" />
     </application>
-    
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />    
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.GET_TASKS" />
 
 </manifest>

@@ -170,7 +170,9 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		trackLocationPendingIntent = PendingIntent.getBroadcast(settingsActivity.getApplicationContext(),
 				0, i, 0);
 		// Register for broadcast intents
-		locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, TIME_BW_UPDATES, 0, trackLocationPendingIntent);
+		locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, TIME_BW_UPDATES, 0, trackLocationPendingIntent);		
+		Toast locationmodeOn = Toast.makeText(getActivity(), "Location tracking started", Toast.LENGTH_LONG);
+		locationmodeOn.show();
 	}
 
 	private void trackRingerMode() {
