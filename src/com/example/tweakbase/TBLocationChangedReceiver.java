@@ -11,7 +11,7 @@ import android.util.Log;
 
 public class TBLocationChangedReceiver extends BroadcastReceiver {
 
-	protected static String TAG = "PassiveLocationChangedReceiver";
+	protected static String TAG = "TBLocationChangedReceiver";
 
 	/**
 	 * When a new location is received, extract it from the Intent and use

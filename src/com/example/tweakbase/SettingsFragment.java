@@ -61,7 +61,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 
 	LocationManager locManager;
 	Activity settingsActivity;
-	TBLocationListener locListener;
+	PendingIntent trackLocationPendingIntent;
 	BroadcastReceiver volumeReceiver;
 //	PredictVolume addPattern;
 
@@ -84,8 +84,6 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 
 		// Load the preferences from an XML resource
 		addPreferencesFromResource(R.xml.preferences);
-
-		locListener = new TBLocationListener(this.getActivity());
 
 		// Load this activity's SharedPreferences and get the saved preferences
 		SharedPreferences sharedPref = getPreferenceManager().getSharedPreferences();
@@ -162,13 +160,14 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	 * TBLocationListener. More info in that class.
 	 */
 	private void trackLocation() {
+		Log.d(TAG, "Starting to track location");
 		
-		LocationManager lm = (LocationManager) settingsActivity.getSystemService(Context.LOCATION_SERVICE);
+		locManager = (LocationManager) settingsActivity.getSystemService(Context.LOCATION_SERVICE);
 		Intent i = new Intent("com.example.tweakbase.LOCATION_READY");
-		PendingIntent pendingIntent = PendingIntent.getBroadcast(settingsActivity.getApplicationContext(),
+		trackLocationPendingIntent = PendingIntent.getBroadcast(settingsActivity.getApplicationContext(),
 		    0, i, 0);
 		// Register for broadcast intents
-		lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, TIME_BW_UPDATES, 0, pendingIntent);
+		locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, TIME_BW_UPDATES, 0, trackLocationPendingIntent);
 		
 //		if (!currentlyTracking) {
 //			Log.d(TAG, "Starting to track location");
@@ -304,7 +303,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 
 			if (!trackMyLocation) {
 				if (locManager != null) {
-					locManager.removeUpdates(locListener);
+					locManager.removeUpdates(trackLocationPendingIntent);
 				}
 				Log.d(TAG, "Location tracking stopped");
 				Toast locationmodeOff = Toast.makeText(getActivity(), "Location tracking stopped", Toast.LENGTH_LONG);

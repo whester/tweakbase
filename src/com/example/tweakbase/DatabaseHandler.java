@@ -173,6 +173,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 				locList.add(location);
 			} while (cursor.moveToNext());
 		}
+		db.close();
 		return locList;
 	}
 	
