@@ -3,6 +3,7 @@ package com.example.tweakbase;
 import java.util.Calendar;
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -42,7 +43,7 @@ import android.widget.Toast;
  */
 public class SettingsFragment extends PreferenceFragment implements OnSharedPreferenceChangeListener {
 
-	final String TAG = "SettingsFragment";
+	private static final String TAG = "SettingsFragment";
 
 	static final String KEY_PREF_TRACK_LOCATION = "pref_trackLocation";	
 	static final String KEY_TRACKING = "trackingLocation";
@@ -53,7 +54,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	static final String KEY_RINGERMODE = "trackingRingerMode";
 	boolean trackMyRingerMode;
 	boolean currentlyTrackingRingerMode;
-	
+
 	static final String KEY_PREF_TRACK_APPLICATIONS = "pref_trackApplications";
 	static final String KEY_APPLICATIONS = "trackingApplications";
 	boolean trackMyApplications;
@@ -63,7 +64,9 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	Activity settingsActivity;
 	PendingIntent trackLocationPendingIntent;
 	BroadcastReceiver volumeReceiver;
-//	PredictVolume addPattern;
+	
+    boolean appTrackerServiceBound = false;
+	//	PredictVolume addPattern;
 
 	// The minimum time between updates in milliseconds
 	private static final long TIME_BW_UPDATES = 1000 * 10; // 10 seconds
@@ -79,7 +82,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
+		
 		settingsActivity = getActivity();
 
 		// Load the preferences from an XML resource
@@ -92,7 +95,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 
 		trackMyRingerMode = sharedPref.getBoolean(KEY_PREF_TRACK_RINGERMODE, true);
 		currentlyTrackingRingerMode = sharedPref.getBoolean(KEY_RINGERMODE, false);
-		
+
 		trackMyApplications = sharedPref.getBoolean(KEY_PREF_TRACK_APPLICATIONS, true);
 		currentlyTrackingApplications = sharedPref.getBoolean(KEY_APPLICATIONS, false);
 
@@ -103,7 +106,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		if (trackMyRingerMode){
 			trackRingerMode();
 		}
-		
+
 		if (trackMyApplications){
 			trackApplications();
 		}
@@ -126,18 +129,18 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 			public void onClick(View v) {
 				String androidId = Secure.getString(settingsActivity.getContentResolver(), Secure.ANDROID_ID); 
 				final String backupDBPath = DatabaseHandler.exportDatabse(DatabaseHandler.DATABASE_NAME, androidId);
-				
+
 				Toast toast = Toast.makeText(settingsActivity, "Uploading now. Your Android ID is " + androidId, Toast.LENGTH_LONG);
 				toast.show();
-				
+
 				/* You can't do data actions on the main thread, so instead we create a new thread to
 				 * take care of the uploading of the database.
 				 */
 				new Thread(new Runnable(){
-				    public void run()
-				    {
-				    	HttpFileUpload.UploadFile(backupDBPath);
-				    }
+					public void run()
+					{
+						HttpFileUpload.UploadFile(backupDBPath);
+					}
 				}).start();
 			}
 		});
@@ -161,74 +164,39 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	 */
 	private void trackLocation() {
 		Log.d(TAG, "Starting to track location");
-		
+
 		locManager = (LocationManager) settingsActivity.getSystemService(Context.LOCATION_SERVICE);
 		Intent i = new Intent("com.example.tweakbase.LOCATION_READY");
 		trackLocationPendingIntent = PendingIntent.getBroadcast(settingsActivity.getApplicationContext(),
-		    0, i, 0);
+				0, i, 0);
 		// Register for broadcast intents
 		locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, TIME_BW_UPDATES, 0, trackLocationPendingIntent);
-		
-//		if (!currentlyTracking) {
-//			Log.d(TAG, "Starting to track location");
-//
-//			// We want to get updates every time the clock ends in a 0 or a 5 (every five minutes).
-//			// This sleeps the thread until the next time that happens
-//			Calendar c = Calendar.getInstance();
-//			Date now = new Date();
-//			c.setTime(now);
-//			int unroundedMinutes = c.get(Calendar.MINUTE);
-//			int mod = unroundedMinutes % 1;	// TODO: Change these 1's to 5's!
-//			c.add(Calendar.MINUTE, mod == 0 ? 1 : 1 - mod);
-//			c.set(Calendar.SECOND, 0);
-//			c.set(Calendar.MILLISECOND, 0);
-//			final long timeToWait = (c.getTimeInMillis()-now.getTime());
-//			final Handler mHandler = new Handler();
-//			Thread locationThread = new Thread(new Runnable(){ public void run(){
-//				mHandler.postDelayed(new Runnable(){ public void run() {
-//					locManager = (LocationManager) settingsActivity.getSystemService(Context.LOCATION_SERVICE);
-//					boolean isGPSEnabled = locManager.isProviderEnabled(LocationManager.GPS_PROVIDER);				
-//					if (isGPSEnabled) {
-//						// Requests location updates from GPS. Android OS knows to call upon locListener every TIME_BW_UPDATES ms
-//						locManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, TIME_BW_UPDATES, 0, locListener);
-//					} else {
-//						// Requests location updates from network.
-//						locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, TIME_BW_UPDATES, 0, locListener);
-//					}
-//					Log.d(TAG, "Location tracking started");
-//					Toast locationmodeOn = Toast.makeText(getActivity(), "Location tracking started", Toast.LENGTH_LONG);
-//					locationmodeOn.show();
-//				}}, timeToWait);
-//			}});
-//			locationThread.start();
-//			Log.d(TAG, "Sleeping until... " + c.getTime());
-//		}
 	}
-	
+
 	private void trackRingerMode() {
 		if (!currentlyTrackingRingerMode) {
-			
+
 			Log.d(TAG, "Ringer mode tracking started");
 			Toast ringermodeOn = Toast.makeText(getActivity(), "Ringer mode tracking started", Toast.LENGTH_LONG);
 			ringermodeOn.show();
-			
+
 			volumeReceiver = new BroadcastReceiver(){
 				@Override
 				public void onReceive(Context context, Intent intent) {
 					DatabaseHandler db = new DatabaseHandler(context);
 					Calendar cal = Calendar.getInstance();
-					
+
 					LocationManager lm = (LocationManager)settingsActivity.getSystemService(Context.LOCATION_SERVICE); 
 					// TODO: Implement a GPS check when it is turned on
 					Location location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 					double longitude = location.getLongitude();
 					double latitude = location.getLatitude();
-					
+
 					AudioManager am = (AudioManager)getActivity().getSystemService(Context.AUDIO_SERVICE);
-					
+
 					// storing everything in the database
 					db.addRingermode(new TBRingermode(latitude, longitude, cal.get(Calendar.DAY_OF_WEEK), am.getRingerMode()));
-				//	addPattern.onPatternIdentified();
+					//	addPattern.onPatternIdentified();
 					switch (am.getRingerMode()) {
 					case AudioManager.RINGER_MODE_SILENT:
 						Log.i(TAG, "Phone is in Silent mode");
@@ -240,7 +208,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 						Log.i(TAG, "Phone is in Normal mode");
 						break;
 					}
-					
+
 					Log.d(TAG, "Latitude: "+ location.getLatitude()+" Longitude: "+ location.getLongitude());
 				}
 			};
@@ -249,16 +217,21 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 			getActivity().registerReceiver(volumeReceiver, filter);
 		}
 	}
-	
-	
+
+
 	private void trackApplications() {
 		if(!currentlyTrackingApplications){
-			Log.d(TAG, "Applications tracking started");
 			Toast applicationsOn = Toast.makeText(getActivity(), "Applications tracking started", Toast.LENGTH_LONG);
 			applicationsOn.show();
+			
+			Log.d(TAG, "Applicaiton tracking started");
+			Intent intent = new Intent(settingsActivity, AppTrackerReceiver.class);
+		    PendingIntent pendingIntent = PendingIntent.getBroadcast(settingsActivity.getApplicationContext(), 69, intent, 0);
+		    AlarmManager alarmManager = (AlarmManager) settingsActivity.getSystemService(Activity.ALARM_SERVICE);
+		    alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 100, 2000, pendingIntent);
 		}
 	}
-	
+
 
 	/** 
 	 * Overridden from PreferenceFragment. Automatically called by the Android OS. Necessary to notify
@@ -291,7 +264,9 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		sharedPref.edit().putBoolean(KEY_TRACKING, trackMyLocation).commit();
 		sharedPref.edit().putBoolean(KEY_RINGERMODE, trackMyRingerMode).commit();
 		sharedPref.edit().putBoolean(KEY_APPLICATIONS, trackMyApplications).commit();
-		getActivity().unregisterReceiver(volumeReceiver);
+		if (volumeReceiver != null) {
+			getActivity().unregisterReceiver(volumeReceiver);
+		}
 		super.onDestroy();
 	}
 
@@ -312,7 +287,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 				trackLocation();
 			}
 		}
-		
+
 		if (key.equals(KEY_PREF_TRACK_RINGERMODE)) {	
 			Log.d(TAG, "Ringer mode tracking preference changed");
 			trackMyRingerMode = sharedPreferences.getBoolean(KEY_PREF_TRACK_RINGERMODE, true);
@@ -329,7 +304,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 				trackRingerMode();
 			}
 		}
-		
+
 		if (key.equals(KEY_PREF_TRACK_APPLICATIONS)) {	
 			trackMyApplications = sharedPreferences.getBoolean(KEY_PREF_TRACK_APPLICATIONS, true);
 
@@ -337,6 +312,10 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 				Log.d(TAG, "Applications tracking stopped");
 				Toast applicationsOff = Toast.makeText(getActivity(), "Applications tracking stopped", Toast.LENGTH_LONG);
 				applicationsOff.show();
+				Intent intentstop = new Intent(settingsActivity, AppTrackerReceiver.class);
+				PendingIntent senderstop = PendingIntent.getBroadcast(settingsActivity, 69, intentstop, 0);
+				AlarmManager alarmManagerstop = (AlarmManager) settingsActivity.getSystemService(Activity.ALARM_SERVICE);
+				alarmManagerstop.cancel(senderstop);
 			} else {
 				trackApplications();
 			}
