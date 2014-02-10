@@ -230,7 +230,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 			Intent intent = new Intent(settingsActivity, AppTrackerReceiver.class);
 		    PendingIntent pendingIntent = PendingIntent.getBroadcast(settingsActivity.getApplicationContext(), 69, intent, 0);
 		    AlarmManager alarmManager = (AlarmManager) settingsActivity.getSystemService(Activity.ALARM_SERVICE);
-		    alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 100, 2000, pendingIntent);
+		    alarmManager.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 100, 2000, pendingIntent);
 		}
 	}
 

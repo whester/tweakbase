@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.os.PowerManager;
 import android.util.Log;
 
 public class AppTrackerReceiver extends BroadcastReceiver {
@@ -22,6 +23,9 @@ public class AppTrackerReceiver extends BroadcastReceiver {
 			+ "Knox Notification Manager,Samsung Cloud Data Relay,Cover,com.sec.msc.nts.android.proxy,com.sec.knox.eventsmanager,TwDVFSApp,"
 			+ "Samsung Push Service,TouchWiz home,FilterProvider";
 	List<String> BLACKLIST = Arrays.asList(blacklist.split(","));
+	
+	private static ActivityManager am;
+	private static PowerManager powerManager;
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
@@ -35,9 +39,14 @@ public class AppTrackerReceiver extends BroadcastReceiver {
 	        homeApp = ai.packageName;
 	        Log.d(TAG, "New homeApp decided on: " + homeApp);
 	        foundHome = true;
+	        am = (ActivityManager) context.getSystemService(Service.ACTIVITY_SERVICE);
+	        powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
 		}
 		
-		ActivityManager am = (ActivityManager) context.getSystemService(Service.ACTIVITY_SERVICE);
+		if (!powerManager.isScreenOn()) {
+			return;	// Don't track if the screen is off
+		}
+		
 		List<ActivityManager.RunningAppProcessInfo> l = am.getRunningAppProcesses();
 		Iterator<ActivityManager.RunningAppProcessInfo> i = l.iterator();
 		PackageManager pm = context.getPackageManager();
