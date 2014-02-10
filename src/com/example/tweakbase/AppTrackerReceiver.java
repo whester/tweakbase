@@ -1,5 +1,6 @@
 package com.example.tweakbase;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -17,6 +18,10 @@ public class AppTrackerReceiver extends BroadcastReceiver {
 	private static final String TAG = "AppTrackerReceiver";
 	static boolean foundHome = false;
 	static String homeApp;
+	final String blacklist = "System UI,Phone,Android System,TweakBase,Aviate,ContextProvider,Nfc Service,LogsProvider,PageBuddyNotiSvc,"
+			+ "Knox Notification Manager,Samsung Cloud Data Relay,Cover,com.sec.msc.nts.android.proxy,com.sec.knox.eventsmanager,TwDVFSApp,"
+			+ "Samsung Push Service,TouchWiz home,FilterProvider";
+	List<String> BLACKLIST = Arrays.asList(blacklist.split(","));
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
@@ -47,8 +52,10 @@ public class AppTrackerReceiver extends BroadcastReceiver {
 					Log.d(TAG, "At home screen, quitting.");
 					break;
 				}
-				Log.d(TAG, c.toString());
-				break;
+				if(!BLACKLIST.contains(c.toString())){
+					Log.d(TAG, c.toString());
+					break;
+				}
 			} catch(Exception e) {
 
 			}
