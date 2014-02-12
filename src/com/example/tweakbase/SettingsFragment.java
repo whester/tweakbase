@@ -1,19 +1,16 @@
 package com.example.tweakbase;
 
-import java.util.Calendar;
-
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
-import android.location.Location;
+import android.content.pm.PackageManager;
 import android.location.LocationManager;
-import android.media.AudioManager;
 import android.os.Bundle;
 import android.preference.PreferenceFragment;
 import android.provider.Settings.Secure;
@@ -24,8 +21,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
-
-// TODO: Upload data, get location on silence, use Places API
 
 /**
  * This class is the meat of SettingsActivity. It handles displaying TweakBase's preferences and 
@@ -60,10 +55,9 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	boolean trackMyApplications;
 	boolean currentlyTrackingApplications;
 
-	LocationManager locManager;
-	Activity settingsActivity;
-	PendingIntent trackLocationPendingIntent;
-	BroadcastReceiver volumeReceiver;
+	private LocationManager locManager;
+	private Activity settingsActivity;
+	private PendingIntent trackLocationPendingIntent;
 	
     boolean appTrackerServiceBound = false;
 	//	PredictVolume addPattern;
@@ -82,7 +76,6 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
 		settingsActivity = getActivity();
 
 		// Load the preferences from an XML resource
@@ -182,41 +175,10 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 			Toast ringermodeOn = Toast.makeText(getActivity(), "Ringer mode tracking started", Toast.LENGTH_LONG);
 			ringermodeOn.show();
 
-			volumeReceiver = new BroadcastReceiver(){
-				@Override
-				public void onReceive(Context context, Intent intent) {
-					DatabaseHandler db = new DatabaseHandler(context);
-					Calendar cal = Calendar.getInstance();
-
-					LocationManager lm = (LocationManager)settingsActivity.getSystemService(Context.LOCATION_SERVICE); 
-					// TODO: Implement a GPS check when it is turned on
-					Location location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-					double longitude = location.getLongitude();
-					double latitude = location.getLatitude();
-
-					AudioManager am = (AudioManager)getActivity().getSystemService(Context.AUDIO_SERVICE);
-
-					// storing everything in the database
-					db.addRingermode(new TBRingermode(latitude, longitude, cal.get(Calendar.DAY_OF_WEEK), am.getRingerMode()));
-					//	addPattern.onPatternIdentified();
-					switch (am.getRingerMode()) {
-					case AudioManager.RINGER_MODE_SILENT:
-						Log.i(TAG, "Phone is in Silent mode");
-						break;
-					case AudioManager.RINGER_MODE_VIBRATE:
-						Log.i(TAG, "Phone is in Vibrate mode");
-						break;
-					case AudioManager.RINGER_MODE_NORMAL:
-						Log.i(TAG, "Phone is in Normal mode");
-						break;
-					}
-
-					Log.d(TAG, "Latitude: "+ location.getLatitude()+" Longitude: "+ location.getLongitude());
-				}
-			};
-
-			IntentFilter filter = new IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION);
-			getActivity().registerReceiver(volumeReceiver, filter);
+			PackageManager pm  = settingsActivity.getPackageManager();
+            ComponentName componentName = new ComponentName(settingsActivity, VolumeReceiver.class);
+            pm.setComponentEnabledSetting(componentName,PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                            PackageManager.DONT_KILL_APP);
 		}
 	}
 
@@ -266,9 +228,6 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		sharedPref.edit().putBoolean(KEY_TRACKING, trackMyLocation).commit();
 		sharedPref.edit().putBoolean(KEY_RINGERMODE, trackMyRingerMode).commit();
 		sharedPref.edit().putBoolean(KEY_APPLICATIONS, trackMyApplications).commit();
-		if (volumeReceiver != null) {
-			getActivity().unregisterReceiver(volumeReceiver);
-		}
 		super.onDestroy();
 	}
 
@@ -296,9 +255,10 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 			Log.d(TAG, "In onCreate, RingerMode preference read as: " + trackMyRingerMode);
 
 			if (!trackMyRingerMode) {
-				if(volumeReceiver != null){
-					getActivity().unregisterReceiver(volumeReceiver);
-				}
+				PackageManager pm  = settingsActivity.getPackageManager();
+	            ComponentName componentName = new ComponentName(settingsActivity, VolumeReceiver.class);
+	            pm.setComponentEnabledSetting(componentName,PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+	                            PackageManager.DONT_KILL_APP);
 				Log.d(TAG, "Ringer mode tracking stopped");
 				Toast ringermodeOff = Toast.makeText(getActivity(), "Ringer mode tracking stopped", Toast.LENGTH_LONG);
 				ringermodeOff.show();

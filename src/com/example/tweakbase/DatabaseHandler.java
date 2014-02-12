@@ -177,6 +177,31 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 		return locList;
 	}
 	
+	public List<TBRingermode> getAllRingermodes() {
+		List<TBRingermode> locList = new ArrayList<TBRingermode>();
+		// Select All Query
+		String selectQuery = "SELECT  * FROM " + TABLE_RINGERMODE;
+
+		SQLiteDatabase db = this.getWritableDatabase();
+		Cursor cursor = db.rawQuery(selectQuery, null);
+
+		// looping through all rows and adding to list
+		if (cursor.moveToFirst()) {
+			do {
+				TBRingermode ringermode = new TBRingermode();
+				ringermode.setLatitude(cursor.getDouble(3));
+				ringermode.setLongitude(cursor.getDouble(4));
+				ringermode.setIntervalId(cursor.getInt(1));
+				ringermode.setDayOfWeek(cursor.getInt(2));
+				ringermode.setType(cursor.getInt(5));
+				// Adding location to list
+				locList.add(ringermode);
+			} while (cursor.moveToNext());
+		}
+		db.close();
+		return locList;
+	}
+	
 	/**
 	 * Saves the passed database to the phone under the name "backup" then your unique
 	 * android device ID, then ".db"

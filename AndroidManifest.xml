@@ -38,6 +38,12 @@
         <receiver
             android:name="AppTrackerReceiver">
         </receiver>
+        <receiver
+            android:name="VolumeReceiver" android:enabled="false">
+            <intent-filter>
+                <action android:name="android.media.RINGER_MODE_CHANGED" />
+            </intent-filter>
+        </receiver>
         
         <service android:enabled="true" android:name="AppTrackerService" />
     </application>
